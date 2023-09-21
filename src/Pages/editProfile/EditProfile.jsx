@@ -41,7 +41,7 @@ const EditProfile = () => {
     e.preventDefault();
 
     if (img) {
-      const storageRef = ref(storage, "usersImages/" + uuid());
+      const storageRef = ref(storage, "userImages/" + uuid());
       const uploadTask = uploadBytesResumable(storageRef, img);
 
       uploadTask.on(
