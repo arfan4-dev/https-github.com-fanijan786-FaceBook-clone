@@ -4,15 +4,17 @@ import PersonIcon from "@mui/icons-material/Person";
 import ChatBubbleIcon from "@mui/icons-material/ChatBubble";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import { Link } from "react-router-dom";
-import profile from '../../assets/profile.jpg'
 import "./navbar.scss";
+import { useContext } from "react";
+import { AuthContext } from "./../../component/Context/AuthContext";
 
 const Navbar = () => {
+  const { currentUser } = useContext(AuthContext);
   return (
     <div className="navbarContainer">
       <div className="navbarLeft">
-      <Link to="/" style={{ textDecoration: "none" }}> 
-          <span className="logo">FakeBook</span>
+        <Link to="/" style={{ textDecoration: "none" }}>
+          <span className="logo">FaceBook</span>
         </Link>
       </div>
       <div className="navbarCenter">
@@ -27,9 +29,8 @@ const Navbar = () => {
       </div>
       <div className="navbarRight">
         <div className="navbarLinks">
-        <Link to="/" style={{ textDecoration: "none" , color:'white'}}> 
-        <span className="navbarLink">Homepage</span>
-        </Link> <span className="navbarLink">Timeline</span>
+          <span className="navbarLink">Homepage</span>
+          <span className="navbarLink">Timeline</span>
         </div>
         <div className="navbarIcons">
           <div className="navbarIconItem">
@@ -45,8 +46,8 @@ const Navbar = () => {
             <span className="navbarIconBadge">8</span>
           </div>
         </div>
-        <Link to="/profile/userId">
-          <img src={profile} alt="" className="navbarImg" />
+        <Link to={`/profile/${currentUser.displayName}`}>
+          <img src={currentUser.photoURL} alt="" className="navbarImg" />
         </Link>
       </div>
     </div>

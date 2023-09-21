@@ -1,73 +1,197 @@
+import React, { useContext, useState } from "react";
 import {
-    Close,
-    EmojiEmotions,
-    PermMedia,
-    VideoCameraFront,
-  } from "@mui/icons-material";
-  import React, { useState } from "react";
-  import "./share.scss";
-  import profile from '../../assets/profile.jpg'
-  const Share = () => {
-    const [file, setFile] = useState(null);
-  
-    const removeImage = () => {
-      setFile(null);
-    };
-    return (
-      <div className="share">
-        <div className="shareWrapper">
-          <div className="shareTop">
-            <img
-              src={profile}
-              alt=""
-              className="shareProfileImg"
-            />
-            <input
-              type="text"
-              placeholder="What's on your mind F A A N ?"
-              className="shareInput"
-            />
-          </div>
-          <hr className="shareHr" />
-          {file && (
-            <div className="shareImgContainer">
-              <img src={URL.createObjectURL(file)} alt="" className="shareImg" />
+  Close,
+  EmojiEmotions,
+  PermMedia,
+  VideoCameraFront,
+} from "@mui/icons-material";
+import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { db, storage } from "../../firebase";
+import { v4 as uuid } from "uuid";
+import {
+  addDoc,
+  arrayUnion,
+  collection,
+  serverTimestamp,
+  Timestamp,
+  updateDoc,
+  doc,
+} from "firebase/firestore";
+import { AuthContext } from "../Context/AuthContext";
+import "./share.scss";
 
-              <Close className="shareCancelImg" onClick={removeImage} />
+const Share = () => {
+  const [error, setError] = useState(false);
+  const { currentUser } = useContext(AuthContext);
+  const [input, setInput] = useState("");
+  const [showEmojis, setShowEmojis] = useState(false);
+  const [img, setImg] = useState(null);
+
+  const handlePost = async () => {
+    try {
+      if (img) {
+        const storagePath = "Posts/" + uuid();
+        const storageRef = ref(storage, storagePath);
+        console.log("Storage Path:", storagePath);
+
+        const uploadTask = uploadBytesResumable(storageRef, img);
+
+        uploadTask.on(
+          "state_changed",
+          null,
+          (error) => {
+            setError(true);
+          },
+          () => {
+            getDownloadURL(uploadTask.snapshot.ref)
+              .then(async (downloadURL) => {
+                await addDoc(collection(db, "Posts"), {
+                  uid: currentUser.uid,
+                  photoURL: currentUser.photoURL,
+                  displayName: currentUser.displayName,
+                  input,
+                  img: downloadURL,
+                  timestamp: serverTimestamp(),
+                });
+
+                await updateDoc(doc(db, "usersPosts", currentUser.uid), {
+                  messages: arrayUnion({
+                    id: uuid(),
+                    uid: currentUser.uid,
+                    photoURL: currentUser.photoURL,
+                    displayName: currentUser.displayName,
+                    input,
+                    img: downloadURL,
+                    timestamp: Timestamp.now(),
+                  }),
+                });
+              })
+              .catch((error) => {
+                console.error("Error getting download URL:", error);
+              });
+          }
+        );
+      } else {
+        await addDoc(collection(db, "Posts"), {
+          uid: currentUser.uid,
+          photoURL: currentUser.photoURL,
+          displayName: currentUser.displayName,
+          input,
+          timestamp: serverTimestamp(),
+        });
+
+        await updateDoc(doc(db, "usersPosts", currentUser.uid), {
+          messages: arrayUnion({
+            id: uuid(),
+            uid: currentUser.uid,
+            photoURL: currentUser.photoURL,
+            displayName: currentUser.displayName,
+            input,
+            timestamp: Timestamp.now(),
+          }),
+        });
+      }
+      setInput("");
+      setImg(null);
+      setShowEmojis(false);
+    } catch (error) {
+      console.error("Error posting:", error);
+      setError(true);
+    }
+  };
+
+  const handleKey = (e) => {
+    if (e.code === "Enter") {
+      handlePost();
+    }
+  };
+
+  const addEmoji = (e) => {
+    let sym = e.unified.split("-");
+    let codesArray = [];
+    sym.forEach((el) => codesArray.push("0x" + el));
+    let emoji = String.fromCodePoint(...codesArray);
+    setInput(input + emoji);
+  };
+
+  const removeImage = () => {
+    setImg(null);
+  };
+
+  return (
+    <div className="share">
+      <div className="shareWrapper">
+        <div className="shareTop">
+          <img
+            src={currentUser.photoURL}
+            alt=""
+            className="shareProfileImg"
+          />
+          <textarea
+            type="text"
+            rows={2}
+            style={{ resize: "none", overflow: "hidden" }}
+            placeholder={"What's on your mind " + currentUser.displayName + "?"}
+            value={input}
+            className="shareInput"
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKey}
+          />
+        </div>
+        <hr className="shareHr" />
+        {img && (
+          <div className="shareImgContainer">
+            <img
+              src={URL.createObjectURL(img)}
+              alt=""
+              className="shareImg"
+            />
+            <Close className="shareCancelImg" onClick={removeImage} />
+          </div>
+        )}
+        <div className="shareBottom">
+          <div className="shareOptions">
+            <div className="shareOption">
+              <VideoCameraFront
+                className="shareIcon"
+                style={{ color: "#bb0000f2" }}
+              />
+              <span className="shareOptionText">Live Video</span>
             </div>
-          )}
-          <div className="shareBottom">
-            <div className="shareOptions">
-              <div className="shareOption">
-                <VideoCameraFront
-                  className="shareIcon"
-                  style={{ color: "#bb0000f2" }}
-                />
-                <span className="shareOptionText">Live Video</span>
-              </div>
-              <label htmlFor="file" className="shareOption">
-                <PermMedia className="shareIcon" style={{ color: "#2e0196f1" }} />
-                <span className="shareOptionText">Photo/Video</span>
-                <input
-                  type="file"
-                  id="file"
-                  accept=".png,.jpeg,.jpg"
-                  style={{ display: "none" }}
-                  onChange={(e) => setFile(e.target.files[0])}
-                />
-              </label>
-              <div className="shareOption">
-                <EmojiEmotions
-                  className="shareIcon"
-                  style={{ color: "#bfc600ec" }}
-                />
-                <span className="shareOptionText">Feelings/Activity</span>
-              </div>
+            <label htmlFor="file" className="shareOption">
+              <PermMedia
+                className="shareIcon"
+                style={{ color: "#2e0196f1" }}
+              />
+              <span className="shareOptionText">Photo/Video</span>
+              <input
+                type="file"
+                id="file"
+                accept=".png,.jpeg,.jpg"
+                style={{ display: "none" }}
+                onChange={(e) => setImg(e.target.files[0])}
+              />
+            </label>
+            <div
+              onClick={() => setShowEmojis(!showEmojis)}
+              className="shareOption"
+            >
+              <EmojiEmotions
+                className="shareIcon"
+                style={{ color: "#bfc600ec" }}
+              />
+              <span className="shareOptionText">Feelings/Activity</span>
             </div>
           </div>
         </div>
+        {/* {showEmojis && (
+          <div className="emoji">
+            <Picker onEmojiSelect={addEmoji} />
+          </div>
+        )} */}
       </div>
-    );
-  };
-  
-  export default Share;
+    </div>
+  );
+};
+
+export default Share;

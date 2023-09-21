@@ -43,7 +43,47 @@
         .shareInput{
             color: rgb(156,156,156);
         }
+
+        
     }
+    .share{
+        .shareWrapper{
+            .shareTop{
+                .shareInput{
+                    color: rgb(156,156,156);
+                }
+            }
+        }
+      }
+  
+    
+    .commentBox{
+        display: flex;
+        .commentInput{
+            color: rgb(156,156,156);
+            border: 1px solid rgb(156,156,156);
+        }
+        .commentPost{
+            background-color: rgb(156,156,156);
+            color: #000000;
+        }
+    }
+   .comment{
+    .commentWrapper{
+        border-top: 1px dashed rgb(156,156,156);
+
+        .commentProfileImg{
+            border: 2px solid rgb(156,156,156);
+        }
+
+        .commentInfo{
+            .commentText{
+                background-color: rgb(156,156,156);
+                color: #000000;
+            }
+        }
+    }
+   }
 
     .rightbar{
         background-color: #111111;
