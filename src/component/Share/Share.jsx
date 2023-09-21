@@ -19,6 +19,7 @@ import {
 } from "firebase/firestore";
 import { AuthContext } from "../Context/AuthContext";
 import "./share.scss";
+import { Picker } from "emoji-mart";
 
 const Share = () => {
   const [error, setError] = useState(false);
@@ -184,11 +185,11 @@ const Share = () => {
             </div>
           </div>
         </div>
-        {/* {showEmojis && (
+         {/* {showEmojis && (
           <div className="emoji">
             <Picker onEmojiSelect={addEmoji} />
           </div>
-        )} */}
+        )}  */}
       </div>
     </div>
   );
